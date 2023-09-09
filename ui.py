@@ -1,5 +1,6 @@
 from tkinter import *
 from tkinter import ttk
+from tkinter.messagebox import askokcancel, WARNING
 
 import database as db
 
@@ -14,6 +15,49 @@ class CenterWidgetMixin:
         y = int(hs/2 - h/2)
 
         self.geometry(f"{w}x{h}+{x}+{y}")
+
+class CreateClientWindow(Toplevel, CenterWidgetMixin):
+    def __init__(self, parent):
+        super().__init__(parent)
+        self.title("Crear Cliente")
+        self.build()
+        self.center()
+        self.transient(parent)
+        self.grab_set()
+    
+    def build(self):
+        frame = Frame(self)
+        frame.pack(padx=20, pady=10)
+
+        Label(frame, text="DNI (2 ints y 1 upper char)").grid(row=0, column=0)
+        Label(frame, text="Nombre (de 2 a 30 chars)").grid(row=0, column=1)
+        Label(frame, text="Apellidos (de 2 60 chars)").grid(row=0, column=2)
+
+        dni = Entry(frame)
+        dni.grid(row=1, column=0)
+
+        nombre = Entry(frame)
+        nombre.grid(row=1, column=1)
+
+        apellidos = Entry(frame)
+        apellidos.grid(row=1, column=2)
+
+        frame = Frame(self)
+        frame.pack(pady=10)
+
+        crear = Button(frame, text='Crear', command=self.create_client)
+        crear.configure(state=DISABLED)
+        crear.grid(row=0, column=0)
+
+        Button(frame, text='Cerrar', command=self.close).grid(row=0, column=1)
+
+
+    def create_client(self):
+        pass
+
+    def close(self):
+        self.destroy()
+        self.update()
 
 
 class MainWindow(Tk, CenterWidgetMixin):
@@ -55,11 +99,25 @@ class MainWindow(Tk, CenterWidgetMixin):
         frame = Frame(self)
         frame.pack(pady=20)
 
-        Button(frame, text='Crear', command=None).grid(row=0, column=0)
+        Button(frame, text='Crear', command=self.create).grid(row=0, column=0)
         Button(frame, text='Modificar', command=None).grid(row=0, column=1)
-        Button(frame, text='Borrar', command=None).grid(row=0, column=2)
+        Button(frame, text='Borrar', command=self.delete).grid(row=0, column=2)
 
         self.treeView = treeView
+    
+    def delete(self):
+        cliente = self.treeView.focus()
+        if cliente:
+            campos = self.treeView.item(cliente, "values")
+            confirmar = askokcancel(
+                title = "Confirmar Borrado",
+                message = f"¿Borrar {campos[1]} {campos[2]}?",
+                icon = WARNING)
+            if confirmar:
+                self.treeView.delete(cliente)
+
+    def create(self):
+        CreateClientWindow(self)
 
 if __name__ == "__main__":
     app = MainWindow()

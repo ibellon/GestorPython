@@ -1,8 +1,10 @@
+import re
 from tkinter import *
 from tkinter import ttk
 from tkinter.messagebox import askokcancel, WARNING
 
 import database as db
+import helpers
 
 class CenterWidgetMixin:
     def center(self):
@@ -35,12 +37,15 @@ class CreateClientWindow(Toplevel, CenterWidgetMixin):
 
         dni = Entry(frame)
         dni.grid(row=1, column=0)
+        dni.bind("<KeyRelease>", lambda event: self.validate(event, 0))
 
         nombre = Entry(frame)
         nombre.grid(row=1, column=1)
+        nombre.bind("<KeyRelease>", lambda event: self.validate(event, 1))
 
         apellidos = Entry(frame)
         apellidos.grid(row=1, column=2)
+        apellidos.bind("<KeyRelease>", lambda event: self.validate(event, 2))
 
         frame = Frame(self)
         frame.pack(pady=10)
@@ -51,13 +56,39 @@ class CreateClientWindow(Toplevel, CenterWidgetMixin):
 
         Button(frame, text='Cerrar', command=self.close).grid(row=0, column=1)
 
+        self.validaciones = [False, False, False]
+        self.crear = crear
+        self.dni = dni
+        self.nombre = nombre
+        self.apellidos = apellidos
 
     def create_client(self):
-        pass
+        self.master.treeView.insert(
+                parent='', index='end', iid=self.dni.get(),
+                values=(self.dni.get(), self.nombre.get(), self.apellidos.get()))
+        self.close()
 
     def close(self):
         self.destroy()
         self.update()
+    
+    def validate(self, event, index):
+        valor = event.widget.get()
+
+        if index == 0:
+            valido = helpers.validarDni(valor, db.Clientes.lista)    
+        if index == 1:
+            valido = valor.isalpha() and len(valor) >= 2 and len(valor) <= 30
+        if index == 2:
+            valido = bool(re.match('[a-zA-Z\s]+$', valor)) and len(valor) >= 2 and len(valor) <= 30
+            
+        if valido:
+            event.widget.configure({"bg": "Green"})
+        else:
+            event.widget.configure({"bg": "Red"})
+
+        self.validaciones[index] = valido
+        self.crear.config(state=NORMAL if self.validaciones == [True, True, True] else DISABLED)
 
 
 class MainWindow(Tk, CenterWidgetMixin):

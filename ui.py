@@ -66,6 +66,7 @@ class CreateClientWindow(Toplevel, CenterWidgetMixin):
         self.master.treeView.insert(
                 parent='', index='end', iid=self.dni.get(),
                 values=(self.dni.get(), self.nombre.get(), self.apellidos.get()))
+        db.Clientes.crear(self.dni.get(), self.nombre.get(), self.apellidos.get())
         self.close()
 
     def close(self):
@@ -80,7 +81,7 @@ class CreateClientWindow(Toplevel, CenterWidgetMixin):
         if index == 1:
             valido = valor.isalpha() and len(valor) >= 2 and len(valor) <= 30
         if index == 2:
-            valido = bool(re.match('[a-zA-Z\s]+$', valor)) and len(valor) >= 2 and len(valor) <= 30
+            valido = bool(re.match('[a-zA-ZáéíóúÁÉÍÓÚ\s]+$', valor)) and len(valor) >= 2 and len(valor) <= 30
             
         if valido:
             event.widget.configure({"bg": "Green"})
@@ -143,6 +144,7 @@ class EditClientWindow(Toplevel, CenterWidgetMixin):
         cliente = self.master.treeView.focus()
         self.master.treeView.item(cliente, values=(
             self.dni.get(), self.nombre.get(), self.apellidos.get()))
+        db.Clientes.modificar(self.dni.get(), self.nombre.get(), self.apellidos.get())
         self.close()
 
     def close(self):
@@ -155,7 +157,7 @@ class EditClientWindow(Toplevel, CenterWidgetMixin):
         if index == 1:
             valido = valor.isalpha() and len(valor) >= 2 and len(valor) <= 30
         if index == 2:
-            valido = bool(re.match('[a-zA-Z\s]+$', valor)) and len(valor) >= 2 and len(valor) <= 30
+            valido = bool(re.match('[a-zA-ZáéíóúÁÉÍÓÚ\s]+$', valor)) and len(valor) >= 2 and len(valor) <= 30
             
         if valido:
             event.widget.configure({"bg": "Green"})
@@ -220,6 +222,7 @@ class MainWindow(Tk, CenterWidgetMixin):
                 icon = WARNING)
             if confirmar:
                 self.treeView.delete(cliente)
+                db.Clientes.borrar(campos[0])
 
     def create(self):
         CreateClientWindow(self)
